@@ -411,6 +411,7 @@ use module_wrf_error
       real d_urb(nz_um)    
       real sf_ac
       integer ibui,nbui
+      integer nbui_g                      ! building types used by BEP1D/BEM in this cell
       integer nlev(nz_um)
  
 !
@@ -758,6 +759,13 @@ use module_wrf_error
             stop
          endif
 
+! BEP1D and BEM use only the building types 1..nbui, where nbui is the
+! number of levels with ss>0 as counted in BEP1D. The state of the other
+! types is neither read nor modified, so it is not gathered or scattered.
+         nbui_g=0
+         do iz=1,nz_um
+            if(ss(iz).gt.0) nbui_g=nbui_g+1
+         enddo
 
 
 do iz= kts,kte
@@ -785,7 +793,7 @@ do iz= kts,kte
 ! maps were built (last index fastest), so that consecutive iterations access
 ! consecutive elements of the urban state arrays.
 
-         do ibui=1,nbui_max
+         do ibui=1,nbui_g
          do iz_u=1,nz_um
          do iw=1,nwr_u
          do id=1,ndm
@@ -842,7 +850,7 @@ do iz= kts,kte
          sfwin1D=0.    !Sensible heat flux from windows
          sfw1D=0.      !Sensible heat flux from walls         
 
-         do ibui=1,nbui_max !Type of building
+         do ibui=1,nbui_g !Type of building
          do iz_u=1,nz_um    !vertical levels
             tlev1D(iz_u,ibui)= tlev_urb3d(ix,ind_bd(ibui,iz_u),iy)  
             qlev1D(iz_u,ibui)= qlev_urb3d(ix,ind_bd(ibui,iz_u),iy)  
@@ -851,7 +859,7 @@ do iz= kts,kte
 
 
 
-         do ibui=1,nbui_max !type of building
+         do ibui=1,nbui_g !type of building
             do iz_u=1,nz_um !vertical levels
                do id=1,ndm  !direction
                   twlev1D(2*id-1,iz_u,ibui)=tw1lev_urb3d(ix,ind_wd(ibui,iz_u,id),iy)
@@ -862,7 +870,7 @@ do iz= kts,kte
             enddo !iz_u
          enddo !ibui
 
-         do ibui=1,nbui_max !type of building
+         do ibui=1,nbui_g !type of building
             do iw=1,ngb_u !layer in the wall
                do id=1,ndm !direction
                   tglev1D(id,iw,ibui)=tglev_urb3d(ix,ind_gbd(ibui,iw,id),iy)
@@ -870,7 +878,7 @@ do iz= kts,kte
             enddo !iw
          enddo !ibui
        
-         do ibui=1,nbui_max !type of building
+         do ibui=1,nbui_g !type of building
             do iw=1,nf_u !layer in the walls
                do iz_u=1,nz_um-1 !verticals levels
                   do id=1,ndm !direction
@@ -885,7 +893,7 @@ do iz= kts,kte
 !End initialization for BEM
 !   
 
-        do ibui=1,nbui_max !type of building
+        do ibui=1,nbui_g !type of building
           do iz=1,nz_um
             do id=1,ndm
           !!  sfw1D(2*id-1,iz)=sfw1(ix,iy,ind_zd(iz,id))
@@ -957,7 +965,7 @@ do iz= kts,kte
                    qv1D,tlev1D,qlev1D,sflev1D,lflev1D,consumlev1D,  &
                    eppvlev1D,tpvlev1D,sfvlev1D,lfvlev1D,twlev1D,tglev1D,tflev1D,sfwin1D,tair1D,sfr_indoor1D,sfrpv1D,gfr1D) 
            
-          do ibui=1,nbui_max !type of building
+          do ibui=1,nbui_g !type of building
 	    do iz=1,nz_um   !vertical levels
                do id=1,ndm ! direction
 	          sfw1_urb3d(ix,ind_zd(ibui,iz,id),iy)=sfw1D(2*id-1,iz,ibui) 
@@ -986,7 +994,7 @@ do iz= kts,kte
 	 enddo
 	 enddo
          
-        do ibui=1,nbui_max
+        do ibui=1,nbui_g
          do iz_u=1,nz_um
          do iw=1,nwr_u
          do id=1,ndm
@@ -1024,14 +1032,14 @@ do iz= kts,kte
 !Outputs of BEM
 !
         
-         do ibui=1,nbui_max !type of building
+         do ibui=1,nbui_g !type of building
          do iz_u=1,nz_um !vertical levels
             tlev_urb3d(ix,ind_bd(ibui,iz_u),iy)=tlev1D(iz_u,ibui)  
             qlev_urb3d(ix,ind_bd(ibui,iz_u),iy)=qlev1D(iz_u,ibui)  
          enddo !iz_u
          enddo !ibui
  
-         do ibui=1,nbui_max !type of building
+         do ibui=1,nbui_g !type of building
          do iz_u=1,nz_um !vertical levels
             do id=1,ndm !direction
                tw1lev_urb3d(ix,ind_wd(ibui,iz_u,id),iy)=twlev1D(2*id-1,iz_u,ibui)
@@ -1042,7 +1050,7 @@ do iz= kts,kte
          enddo !iz_u
          enddo !ibui
         
-         do ibui=1,nbui_max  !type of building
+         do ibui=1,nbui_g  !type of building
             do iw=1,ngb_u !layers in the walls
                do id=1,ndm !direction
                   tglev_urb3d(ix,ind_gbd(ibui,iw,id),iy)=tglev1D(id,iw,ibui)
@@ -1050,7 +1058,7 @@ do iz= kts,kte
             enddo !iw
          enddo !ibui
 
-        do ibui=1,nbui_max !type of building 
+        do ibui=1,nbui_g !type of building 
         do iw=1,nf_u !layer in the walls
                do iz_u=1,nz_um-1 !verticals levels
                  do  id=1,ndm
