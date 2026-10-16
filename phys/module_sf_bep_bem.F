@@ -705,8 +705,12 @@ use module_wrf_error
 
       endif ! first
 
-do ix=its,ite
+! Visit the cells with ix innermost, following the memory layout of the
+! (ims:ime,1:n,jms:jme) urban state arrays. Each cell starts from locals that
+! are set again for that cell and updates only its own (ix,:,iy) data, so the
+! results do not depend on the order in which the cells are visited.
       do iy=jts,jte
+      do ix=its,ite
         if (FRC_URB2D(ix,iy).gt.0.) then    ! Calling BEP only for existing urban classes.
 	
          iurb=UTYPE_URB2D(ix,iy)
@@ -1146,8 +1150,8 @@ do iz= kts,kte
          endif ! FRC_URB2D
 
 
-      enddo  ! iy
       enddo  ! ix
+      enddo  ! iy
 
 
         time_bep=time_bep+dt
